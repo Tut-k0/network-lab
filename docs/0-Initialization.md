@@ -5,7 +5,7 @@
 * Decent specs to run multiple VMs.
 
 ### Installing VMware Workstation (Linux)
-1. Download bundle package from VMware's site: https://customerconnect.vmware.com/en/downloads/details?downloadGroup=WKST-1624-LX&productId=1038&rPId=91435#product_downloads
+1. Download bundle package from VMware's site: https://www.vmware.com/products/workstation-pro/workstation-pro-evaluation.html
 2. Run the bundler to install VMware Workstation
 ```bash
 # Set the bundler to be an executable
