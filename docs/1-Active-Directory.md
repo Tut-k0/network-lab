@@ -3,48 +3,29 @@
 
 ## First Steps
 1. Clone a server from our template, which is going to be our Domain Controller. (This can be a linked clone).
-2. Clone a workstation from our template, which will NOT be connected to our domain, but can act as our admin machine for setting this up. (Optional)
+2. Clone a workstation from our template, this will be connected to our domain once that is setup.
+3. Clone a workstation from our template, which will NOT be connected to our domain, but can act as our admin machine for setting this up. (Optional)
+4. Create a virtual network configuration. (Optional)
 
-#### SSH Connection Between Server and Workstation Machine.
-**In the real world, most likely we would not interface directly with the server, but rather remote into it. We could use WinRM which is the default way, but I would rather use SSH and key based authentication.**
+## Server Setup
+Once we have cloned and started up our Server (DC), we can now get started on configuring it.
+SConfig will work fine with this for manual setup, but there will be a PowerShell script that just does all of these steps automagically.
 
-1. Go into SConfig on the server and disable remote management, as this is for WinRM and we will use SSH key based authentication.
-2. Back in PowerShell, lets configure our SSH configuration on our server.
-   ```powershell
-   # Install OpenSSH Server if it is not installed.
-   Add-WindowsCapability -Online -Name OpenSSH.Server
-   # Start the service
-   Start-Service -Name sshd
-   # Always start the service.
-   Set-Service -Name sshd -StartupType Automatic
-   # Force SSH connections to use PowerShell
-   New-ItemProperty -Path "HKLM:\SOFTWARE\OpenSSH" -Name DefaultShell -Value "C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe" -PropertyType String -Force
-   ```
-3. SSH into the Server from the Workstation using password based authentication:
-   ```powershell
-   ssh Administrator@<Server-IP>
-   ```
-4. Generate a key pair (ON OUR WORKSTATION) to load onto the server:
-   ```powershell
-   # Do this on the workstation, not the server.
-   ssh-keygen -t rsa -b 4096  # Create key pair.
-   # Setup ssh-agent for storing our private key.
-   Get-Service ssh-agent | Set-Service -StartupType Automatic
-   Start-Service ssh-agent
-   Get-Service ssh-agent
-   ssh-add $env:USERPROFILE\.ssh\id_rsa
-   # Save the public key for later.
-   Get-Content .\.ssh\id_rsa.pub | Set-Clipboard
-   ```
-5. Add our pub key onto the server:
-   ```powershell
-   # In the Administrator's root directory.
-   mkdir .ssh
-   cd .\.ssh
-   New-Item authorized_keys
-   echo "SSH PUBLIC KEY HERE" > authorized_keys
-   ```
-6. Test our SSH connection via our key:
-   ```powershell
-   ssh -i .\.ssh\id_rsa Administrator@<server-IP>
-   ```
+### SConfig (Manual)
+1. Change the Computer name (option 2). I.E `DC-01`
+2. Change the network settings (option 8).
+   - Set the network adapter address, I.E `S` for static followed by the IP, I.E `10.4.20.69`, set the subnet mask and preferred gateway.
+   - Set DNS Servers, the preferred should be the static IP you set above, the backup is not required. Domain Controllers should be the DNS server.
+3. Install Active Directory:
+    ```powershell
+    Install-WindowsFeature AD-Domain-Services -IncludeManagementTools
+    Import-Module ADDSDeployment
+    Install-ADDSForest
+    ```
+4. Restore DNS Server Configuration. When running `Install-ADDSForest`, the preferred DNS server gets reset to `127.0.0.1`.
+
+### Automated
+1. Run the `install-ad-server.ps1` script.
+
+## Workstation Setup
+**TODO**
